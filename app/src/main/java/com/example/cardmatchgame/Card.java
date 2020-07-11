@@ -6,7 +6,7 @@ public class Card {
     public static final int CARD_SHOW=0;
     public static final int CARD_CLOSE=1;
     public static final int CARD_PLAYEROPEN=2;
-    public static final int CARD_MATCHED=0;
+    public static final int CARD_MATCHED=3;
 
     //카드 상태 멤버 변수
     public int _state;
