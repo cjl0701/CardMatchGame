@@ -1,11 +1,11 @@
 package com.example.cardmatchgame;
 
+import android.app.AlertDialog;
 import android.os.Looper;
 import android.widget.Toast;
 
 public class CardGameThread extends Thread {
     CardGameView _cardGameView;
-
     public CardGameThread(CardGameView _cardGameView) {
         this._cardGameView = _cardGameView;
     }

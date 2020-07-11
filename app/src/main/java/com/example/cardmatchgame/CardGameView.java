@@ -62,6 +62,7 @@ public class CardGameView extends View {
         setCardBox();
 
         _sound_Background.start();
+        Toast.makeText(getContext(), "터치하면 시작합니다.", Toast.LENGTH_LONG).show();
         //짝맞추기를 검사하는 스레드 실행
         CardGameThread thread = new CardGameThread(this);
         thread.start();
@@ -93,6 +94,7 @@ public class CardGameView extends View {
         _backGroundImage = createScaledBitmap(_backGroundImage, width, height, true);
         canvas.drawBitmap(_backGroundImage, 0, 0, null);
 
+        boolean allMatched = true;
         //카드 그려주기
         for (int y = 0; y < 2; y++) {
             for (int x = 0; x < 3; x++)
@@ -109,9 +111,13 @@ public class CardGameView extends View {
                         canvas.drawBitmap(_card_Blue, 100 + x * 230, 600 + y * 320, null);
                 }
                 //카드 뒷면을 그려야 하는 경우
-                else
+                else {
                     canvas.drawBitmap(_cardBackSide, 100 + x * 230, 600 + y * 320, null);
+                    allMatched = false;
+                }
         }
+        if (allMatched && _state == STATE_GAME)
+            Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_SHORT).show();
     }
 
 
@@ -144,8 +150,6 @@ public class CardGameView extends View {
                     }
             }
         } else if (_state == STATE_END) {
-            System.out.println("재시작전 클릭");
-            _state = STATE_READY;
             restart();
         }
         //화면 갱신
@@ -200,11 +204,12 @@ public class CardGameView extends View {
         invalidate();
     }
 
+    //모든 카드가 매치되었는지 확인
     public boolean isMatchedAll() {
         for (int y = 0; y < 2; y++) {
             for (int x = 0; x < 3; x++)
                 if (_shuffle[x][y]._state != Card.CARD_MATCHED) { //매치되지 않은 카드가 있다면
-                   return false;
+                    return false;
                 }
         }
         _state = STATE_END;
