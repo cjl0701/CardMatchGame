@@ -45,6 +45,7 @@ public class CardGameView extends View {
     MediaPlayer _sound_Background;
     MediaPlayer _sound_1; //효과음
 
+    /* 너무 길다.. 그냥 Handler 상속할 게 아니라 객체 만들어도 됨
     Handler handler;
 
     class MainHandler extends Handler{
@@ -56,7 +57,9 @@ public class CardGameView extends View {
             if(value==1)
                 Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_LONG).show();
         }
-    }
+    }*/
+
+    Handler handler = new Handler();
 
     public CardGameView(Context context) {
         super(context);
@@ -85,7 +88,7 @@ public class CardGameView extends View {
         CardGameThread thread = new CardGameThread(this);
         thread.start();
 
-        handler = new MainHandler();
+        //handler = new MainHandler();
     }
 
     public void restart() {
