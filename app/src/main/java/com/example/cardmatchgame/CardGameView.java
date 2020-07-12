@@ -7,9 +7,14 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
 
 import java.io.IOException;
 
@@ -40,6 +45,19 @@ public class CardGameView extends View {
     MediaPlayer _sound_Background;
     MediaPlayer _sound_1; //효과음
 
+    Handler handler;
+
+    class MainHandler extends Handler{
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+
+            int value = msg.getData().getInt("value");
+            if(value==1)
+                Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_LONG).show();
+        }
+    }
+
     public CardGameView(Context context) {
         super(context);
         _backGroundImage = BitmapFactory.decodeResource(getResources(), R.drawable.background, null);
@@ -66,6 +84,8 @@ public class CardGameView extends View {
         //짝맞추기를 검사하는 스레드 실행
         CardGameThread thread = new CardGameThread(this);
         thread.start();
+
+        handler = new MainHandler();
     }
 
     public void restart() {
@@ -94,7 +114,7 @@ public class CardGameView extends View {
         _backGroundImage = createScaledBitmap(_backGroundImage, width, height, true);
         canvas.drawBitmap(_backGroundImage, 0, 0, null);
 
-        boolean allMatched = true;
+        //boolean allMatched = true;
         //카드 그려주기
         for (int y = 0; y < 2; y++) {
             for (int x = 0; x < 3; x++)
@@ -113,11 +133,11 @@ public class CardGameView extends View {
                 //카드 뒷면을 그려야 하는 경우
                 else {
                     canvas.drawBitmap(_cardBackSide, 100 + x * 230, 600 + y * 320, null);
-                    allMatched = false;
+                  //  allMatched = false;
                 }
         }
-        if (allMatched && _state == STATE_GAME)
-            Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_SHORT).show();
+//        if (allMatched && _state == STATE_GAME)
+//            Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_SHORT).show();
     }
 
 
