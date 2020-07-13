@@ -1,20 +1,17 @@
 package com.example.cardmatchgame;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
-import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
+import com.example.cardmatchgame.cardcolor.CardColor;
 
 import java.io.IOException;
 
@@ -27,6 +24,7 @@ public class CardGameView extends View {
     Bitmap _card_Green;
     Bitmap _card_Blue;
 
+    //요걸 상태 클래스화
     public static final int STATE_READY = 0;
     public static final int STATE_GAME = 1;
     public static final int STATE_END = 2;
@@ -44,20 +42,6 @@ public class CardGameView extends View {
 
     MediaPlayer _sound_Background;
     MediaPlayer _sound_1; //효과음
-
-    /* 너무 길다.. 그냥 Handler 상속할 게 아니라 객체 만들어도 됨
-    Handler handler;
-
-    class MainHandler extends Handler{
-        @Override
-        public void handleMessage(@NonNull Message msg) {
-            super.handleMessage(msg);
-
-            int value = msg.getData().getInt("value");
-            if(value==1)
-                Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_LONG).show();
-        }
-    }*/
 
     Handler handler = new Handler();
 
@@ -87,8 +71,84 @@ public class CardGameView extends View {
         //짝맞추기를 검사하는 스레드 실행
         CardGameThread thread = new CardGameThread(this);
         thread.start();
+    }
 
-        //handler = new MainHandler();
+    @Override
+    protected void onDraw(Canvas canvas) {
+        //super.onDraw(canvas);
+        //배경 이미지 그리기
+        int width = getWidth();
+        int height = getHeight();
+        _backGroundImage = createScaledBitmap(_backGroundImage, width, height, true);
+        canvas.drawBitmap(_backGroundImage, 0, 0, null);
+
+        //카드 그려주기
+        for (int y = 0; y < 2; y++) {
+            for (int x = 0; x < 3; x++)
+                _shuffle[x][y].draw(canvas, x, y);
+
+                /* before
+                //카드 앞면을 그려야 하는 경우
+                if (_shuffle[x][y]._state == Card.CARD_SHOW ||
+                        _shuffle[x][y]._state == Card.CARD_PLAYEROPEN ||
+                        _shuffle[x][y]._state == Card.CARD_MATCHED) {
+                    //색상에 따라 카드 앞면 그리기
+                    if (_shuffle[x][y]._color == Card.IMG_RED)
+                        canvas.drawBitmap(_card_Red, 100 + x * 230, 600 + y * 320, null);
+                    else if (_shuffle[x][y]._color == Card.IMG_GREEN)
+                        canvas.drawBitmap(_card_Green, 100 + x * 230, 600 + y * 320, null);
+                    else if (_shuffle[x][y]._color == Card.IMG_BLUE)
+                        canvas.drawBitmap(_card_Blue, 100 + x * 230, 600 + y * 320, null);
+                }
+                //카드 뒷면을 그려야 하는 경우
+                else {
+                    canvas.drawBitmap(_cardBackSide, 100 + x * 230, 600 + y * 320, null);
+                }
+                 */
+        }
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+
+        //gameState.do();
+        /* before
+        if (_state == STATE_READY) {
+            startGame();
+            _state = STATE_GAME;
+        } else if (_state == STATE_GAME) {
+            //카드 뒤집는 처리
+            int px = (int) event.getX();
+            int py = (int) event.getY();
+            //어떤 카드가 선택되었는지 확인
+            for (int y = 0; y < 2; y++) {
+                for (int x = 0; x < 3; x++)
+                    if (_box_card[x][y].contains(px, py)) {
+                        //선택된 카드 뒤집기
+                        if (_shuffle[x][y].get_state() != _shuffle[x][y].get_matchedState()) { //맞춘 카드는 뒤집을 필요x
+                            _sound_1.start();
+                            if (_selectedCard1 == null) { //첫 카드를 뒤집는 경우
+                                _selectedCard1 = _shuffle[x][y];
+                                _selectedCard1.playerOpen();
+                            } else { //두 번째 카드 뒤집는 경우
+                                if (_selectedCard1 != _shuffle[x][y]) {//중복 뒤집기 방지
+                                    _selectedCard2 = _shuffle[x][y];
+                                    _selectedCard2.playerOpen();
+                                }
+                            }
+                        }
+                    }
+            }
+        } else if (_state == STATE_END) {
+            restart();
+        }
+         */
+
+        //화면 갱신
+        invalidate(); //draw 이벤트 발생하여 onDraw() 호출
+
+        //ACTION_MOVE나 ACTION_UP의 액션 이벤트 처리를 위해서는 TRUE를 반환해야 함
+        return true;
     }
 
     public void restart() {
@@ -108,80 +168,6 @@ public class CardGameView extends View {
         thread.start();
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
-        //super.onDraw(canvas);
-        //배경 이미지 그리기
-        int width = getWidth();
-        int height = getHeight();
-        _backGroundImage = createScaledBitmap(_backGroundImage, width, height, true);
-        canvas.drawBitmap(_backGroundImage, 0, 0, null);
-
-        //boolean allMatched = true;
-        //카드 그려주기
-        for (int y = 0; y < 2; y++) {
-            for (int x = 0; x < 3; x++)
-                //카드 앞면을 그려야 하는 경우
-                if (_shuffle[x][y]._state == Card.CARD_SHOW ||
-                        _shuffle[x][y]._state == Card.CARD_PLAYEROPEN ||
-                        _shuffle[x][y]._state == Card.CARD_MATCHED) {
-                    //색상에 따라 카드 앞면 그리기
-                    if (_shuffle[x][y]._color == Card.IMG_RED)
-                        canvas.drawBitmap(_card_Red, 100 + x * 230, 600 + y * 320, null);
-                    else if (_shuffle[x][y]._color == Card.IMG_GREEN)
-                        canvas.drawBitmap(_card_Green, 100 + x * 230, 600 + y * 320, null);
-                    else if (_shuffle[x][y]._color == Card.IMG_BLUE)
-                        canvas.drawBitmap(_card_Blue, 100 + x * 230, 600 + y * 320, null);
-                }
-                //카드 뒷면을 그려야 하는 경우
-                else {
-                    canvas.drawBitmap(_cardBackSide, 100 + x * 230, 600 + y * 320, null);
-                  //  allMatched = false;
-                }
-        }
-//        if (allMatched && _state == STATE_GAME)
-//            Toast.makeText(getContext(), "clear! 터치하면 재시작합니다.", Toast.LENGTH_SHORT).show();
-    }
-
-
-    @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (_state == STATE_READY) {
-            startGame();
-            _state = STATE_GAME;
-        } else if (_state == STATE_GAME) {
-            //카드 뒤집는 처리
-            int px = (int) event.getX();
-            int py = (int) event.getY();
-            //어떤 카드가 선택되었는지 확인
-            for (int y = 0; y < 2; y++) {
-                for (int x = 0; x < 3; x++)
-                    if (_box_card[x][y].contains(px, py)) {
-                        //선택된 카드 뒤집기
-                        if (_shuffle[x][y]._state != Card.CARD_MATCHED) { //맞춘 카드는 뒤집을 필요x
-                            _sound_1.start();
-                            if (_selectedCard1 == null) { //첫 카드를 뒤집는 경우
-                                _selectedCard1 = _shuffle[x][y];
-                                _selectedCard1._state = Card.CARD_PLAYEROPEN;
-                            } else { //두 번째 카드 뒤집는 경우
-                                if (_selectedCard1 != _shuffle[x][y]) {//중복 뒤집기 방지
-                                    _selectedCard2 = _shuffle[x][y];
-                                    _selectedCard2._state = Card.CARD_PLAYEROPEN;
-                                }
-                            }
-                        }
-                    }
-            }
-        } else if (_state == STATE_END) {
-            restart();
-        }
-        //화면 갱신
-        invalidate(); //draw 이벤트 발생하여 onDraw() 호출
-
-        //ACTION_MOVE나 ACTION_UP의 액션 이벤트 처리를 위해서는 TRUE를 반환해야 함
-        return true;
-    }
-
     public void checkMatch() {
         //두 카드 중 하나라도 선택이 안 되었다면 비교할 필요 없음
         if (_selectedCard1 == null || _selectedCard2 == null)
@@ -194,34 +180,30 @@ public class CardGameView extends View {
         }
 
         //두 카드의 색상 비교
-        if (_selectedCard1._color == _selectedCard2._color) {
+        if (_selectedCard1.get_color().getClass().isInstance(_selectedCard2.get_color())) {
+            System.out.println("색상이 같아 매치 상태로 바꿈\n");
             //두 카드의 색상이 같으면 두 카드를 맞춘 상태로 바꿈
-            _selectedCard1._state = Card.CARD_MATCHED;
-            _selectedCard2._state = Card.CARD_MATCHED;
-
-            //다시 선택할 수 있도록 null로 설정
-            _selectedCard1 = null;
-            _selectedCard2 = null;
+            _selectedCard1.changeState(_selectedCard1.get_matchedState());
+            _selectedCard2.changeState(_selectedCard2.get_matchedState());
         } else {//두 카드의 색상이 다른 경우 두 카드를 이전처럼 뒷면으로 돌려줌
-            _selectedCard1._state = Card.CARD_CLOSE;
-            _selectedCard2._state = Card.CARD_CLOSE;
-
-            //다시 선택할 수 있도록 null로 설정
-            _selectedCard1 = null;
-            _selectedCard2 = null;
+            System.out.println("색상이 달라 close 상태로 바꿈\n");
+            _selectedCard1.close();
+            _selectedCard2.close();
         }
+        //다시 선택할 수 있도록 null로 설정
+        _selectedCard1 = null;
+        _selectedCard2 = null;
+
         //invalidate();
         postInvalidate();//스레드에서 사용하므로
     }
 
     public void startGame() {
-        //모든 카드를 뒷면 상태로 만든다
-        _shuffle[0][0]._state = Card.CARD_CLOSE;
-        _shuffle[0][1]._state = Card.CARD_CLOSE;
-        _shuffle[1][0]._state = Card.CARD_CLOSE;
-        _shuffle[1][1]._state = Card.CARD_CLOSE;
-        _shuffle[2][0]._state = Card.CARD_CLOSE;
-        _shuffle[2][1]._state = Card.CARD_CLOSE;
+        //모든 카드를 뒷면 상태로 만든다.
+        for (int y = 0; y < 2; y++) {
+            for (int x = 0; x < 3; x++)
+                _shuffle[x][y].close();
+        }
 
         //화면 갱신
         invalidate();
@@ -231,7 +213,7 @@ public class CardGameView extends View {
     public boolean isMatchedAll() {
         for (int y = 0; y < 2; y++) {
             for (int x = 0; x < 3; x++)
-                if (_shuffle[x][y]._state != Card.CARD_MATCHED) { //매치되지 않은 카드가 있다면
+                if (_shuffle[x][y]._state != _shuffle[x][y].get_matchedState()) { //매치되지 않은 카드가 있다면
                     return false;
                 }
         }
@@ -243,24 +225,28 @@ public class CardGameView extends View {
     //각각의 색을 가진 카드들을 생성
     public void setCardShuffle() {
         //초기값
-        _shuffle[0][0] = new Card(Card.IMG_RED);
-        _shuffle[0][1] = new Card(Card.IMG_BLUE);
-        _shuffle[1][0] = new Card(Card.IMG_GREEN);
-        _shuffle[1][1] = new Card(Card.IMG_GREEN);
-        _shuffle[2][0] = new Card(Card.IMG_BLUE);
-        _shuffle[2][1] = new Card(Card.IMG_RED);
+        for (int y = 0; y < 2; y++) {
+            for (int x = 0; x < 3; x++)
+                _shuffle[x][y] = new Card(_card_Red, _card_Green, _card_Blue, _cardBackSide);
+        }
+        _shuffle[0][0].changeColor(_shuffle[0][0]._red);
+        _shuffle[0][1].changeColor(_shuffle[0][1]._red);
+        _shuffle[1][0].changeColor(_shuffle[1][0]._blue);
+        _shuffle[1][1].changeColor(_shuffle[1][1]._blue);
+        _shuffle[2][0].changeColor(_shuffle[2][0]._green);
+        _shuffle[2][1].changeColor(_shuffle[2][1]._green);
 
         //랜덤으로 섞기
         int x1, y1, x2, y2;
-        int temp;
+        CardColor temp;
         for (int i = 0; i < 6 * 2; i++) {
             x1 = (int) (Math.random() * 3);//0~2
             y1 = (int) (Math.random() * 2);//0~1
             x2 = (int) (Math.random() * 3);//0~2
             y2 = (int) (Math.random() * 2);//0~1
-            temp = _shuffle[x1][y1]._color;
-            _shuffle[x1][y1]._color = _shuffle[x2][y2]._color;
-            _shuffle[x2][y2]._color = temp;
+            temp = _shuffle[x1][y1].get_color();
+            _shuffle[x1][y1].changeColor(_shuffle[x2][y2].get_color());
+            _shuffle[x2][y2].changeColor(temp);
         }
     }
 
