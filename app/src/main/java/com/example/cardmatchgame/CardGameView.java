@@ -12,6 +12,10 @@ import android.view.View;
 import android.widget.Toast;
 
 import com.example.cardmatchgame.cardcolor.CardColor;
+import com.example.cardmatchgame.gameState.EndState;
+import com.example.cardmatchgame.gameState.GameState;
+import com.example.cardmatchgame.gameState.IState;
+import com.example.cardmatchgame.gameState.ReadyState;
 
 import java.io.IOException;
 
@@ -24,11 +28,24 @@ public class CardGameView extends View {
     Bitmap _card_Green;
     Bitmap _card_Blue;
 
+    IState _state;
+    IState _readyState;
+    IState _gameState;
+    IState _endState;
     //요걸 상태 클래스화
-    public static final int STATE_READY = 0;
+    /*public static final int STATE_READY = 0;
     public static final int STATE_GAME = 1;
     public static final int STATE_END = 2;
     private int _state = STATE_READY;
+    */
+
+    public Card[][] get_shuffle() {
+        return _shuffle;
+    }
+
+    public Rect[][] get_box_card() {
+        return _box_card;
+    }
 
     //화면에 표시할 카드
     Card _shuffle[][];
@@ -43,6 +60,10 @@ public class CardGameView extends View {
     MediaPlayer _sound_Background;
     MediaPlayer _sound_1; //효과음
 
+    public MediaPlayer get_sound_1() {
+        return _sound_1;
+    }
+
     Handler handler = new Handler();
 
     public CardGameView(Context context) {
@@ -55,6 +76,11 @@ public class CardGameView extends View {
 
         _sound_Background = MediaPlayer.create(context, R.raw.background);
         _sound_1 = MediaPlayer.create(context, R.raw.effect3);
+
+        _readyState = new ReadyState(this);
+        _gameState = new GameState(this);
+        _endState = new EndState(this);
+        _state = _readyState;
 
         //화면에 표시할 카드만큼 할당
         _shuffle = new Card[3][2];
@@ -108,9 +134,13 @@ public class CardGameView extends View {
         }
     }
 
+    public void playGame(MotionEvent event) {
+        _state.playGame(event);
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-
+        playGame(event);
         //gameState.do();
         /* before
         if (_state == STATE_READY) {
@@ -154,8 +184,6 @@ public class CardGameView extends View {
     public void restart() {
         //카드를 생성하고 섞음
         setCardShuffle();
-
-        _state = STATE_READY;
 
         try {
             _sound_Background.prepare();
@@ -217,7 +245,7 @@ public class CardGameView extends View {
                     return false;
                 }
         }
-        _state = STATE_END;
+        changeState((_endState));
         _sound_Background.stop();
         return true;
     }
@@ -256,5 +284,35 @@ public class CardGameView extends View {
                 //각 카드의 박스 값을 생성
                 _box_card[x][y] = new Rect(100 + x * 230, 600 + y * 320, 100 + x * 230 + 200, 600 + y * 320 + 300);
         }
+    }
+
+    public void changeState(IState state) {
+        _state = state;
+    }
+
+    public IState get_readyState() {
+        return _readyState;
+    }
+
+    public IState get_gameState() {
+        return _gameState;
+    }
+
+    public IState get_endState() {
+        return _endState;
+    }
+    public Card get_selectedCard1() {
+        return _selectedCard1;
+    }
+
+    public Card get_selectedCard2() {
+        return _selectedCard2;
+    }
+    public void set_selectedCard1(Card _selectedCard1) {
+        this._selectedCard1 = _selectedCard1;
+    }
+
+    public void set_selectedCard2(Card _selectedCard2) {
+        this._selectedCard2 = _selectedCard2;
     }
 }
