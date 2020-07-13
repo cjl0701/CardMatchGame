@@ -32,20 +32,6 @@ public class CardGameView extends View {
     IState _readyState;
     IState _gameState;
     IState _endState;
-    //요걸 상태 클래스화
-    /*public static final int STATE_READY = 0;
-    public static final int STATE_GAME = 1;
-    public static final int STATE_END = 2;
-    private int _state = STATE_READY;
-    */
-
-    public Card[][] get_shuffle() {
-        return _shuffle;
-    }
-
-    public Rect[][] get_box_card() {
-        return _box_card;
-    }
 
     //화면에 표시할 카드
     Card _shuffle[][];
@@ -60,10 +46,7 @@ public class CardGameView extends View {
     MediaPlayer _sound_Background;
     MediaPlayer _sound_1; //효과음
 
-    public MediaPlayer get_sound_1() {
-        return _sound_1;
-    }
-
+    //서브 스레드에서 UI를 조작할 수 없어 만듦
     Handler handler = new Handler();
 
     public CardGameView(Context context) {
@@ -314,5 +297,15 @@ public class CardGameView extends View {
 
     public void set_selectedCard2(Card _selectedCard2) {
         this._selectedCard2 = _selectedCard2;
+    }
+    public Card[][] get_shuffle() {
+        return _shuffle;
+    }
+
+    public Rect[][] get_box_card() {
+        return _box_card;
+    }
+    public MediaPlayer get_sound_1() {
+        return _sound_1;
     }
 }
